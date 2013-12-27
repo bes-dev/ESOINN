@@ -1,3 +1,6 @@
+/*
+ * author: Sergei Belousov aka BeS
+ */
 #ifndef ESOINN_H
 #define ESOINN_H
 

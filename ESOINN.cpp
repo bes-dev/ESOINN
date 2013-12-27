@@ -1,3 +1,6 @@
+/*
+ * author: Sergei Belousov aka BeS
+ */
 #include "ESOINN.h"
 
 #include <fstream>
