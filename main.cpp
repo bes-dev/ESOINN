@@ -1,4 +1,3 @@
-#define BOOST_ALL_DYN_LINK
 #include <iostream>
 #include <vector>
 #include <string>
@@ -81,7 +80,6 @@ int main(int argc, char **argv)
     {
         return 1;
     }
-//    std::srand(std::time(0));
     soinn::ESOINN model;
     ublas::vector<double> a(2);
     ublas::vector<double> x1(2), x2(2);
@@ -114,27 +112,14 @@ int main(int argc, char **argv)
             a(0) = points[id].x;
             a(1) = points[id].y;
             model.addSignal(a);
-	        //model.classify();
-			cv::Mat img1(img.size(), CV_32FC3);
-
-			//draw(img1, model.getGraph());
-			//cv::imshow("first_layer", img1);
-			//cv::waitKey(10);
         }
         model.classify();
 		cv::Mat img1(img.size(), CV_32FC3);
 
         draw(img1, model.getGraph());
-        cv::imshow("first_layer", img1);
+        cv::imshow("ESOINN", img1);
         cv::waitKey();
 
-    }
-    if(opts.visible)
-    {
-        cv::Mat img1 = img.clone();
-
-        draw(img1, model.getGraph());
-        cv::imshow("first_layer", img1);
     }
 
     return 0;

@@ -1,5 +1,6 @@
 /*
  * author: Sergei Belousov aka BeS
+ * email: belbes122@yandex.ru
  */
 #include "ESOINN.h"
 

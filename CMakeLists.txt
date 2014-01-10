@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 aux_source_directory(. SRC_LIST)
 
 #Boost
-find_package(Boost REQUIRED)
+find_package(Boost COMPONENTS ${BOOST_COMPONENTS} system filesystem serialization program_options graph REQUIRED)
 if(NOT Boost_FOUND)
     message(SEND_ERROR "Failed to find Boost")
     return()
@@ -22,6 +22,8 @@ if(NOT OpenCV_FOUND)
 else()
     include_directories(${Opencv_INCLUDE_DIR})
 endif()
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -O3")
 
 add_executable(${PROJECT_NAME} ${SRC_LIST})
 target_link_libraries(${PROJECT_NAME} ${OpenCV_LIBS} ${Boost_LIBRARIES})

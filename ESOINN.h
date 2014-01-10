@@ -1,5 +1,6 @@
 /*
  * author: Sergei Belousov aka BeS
+ * email: belbes122@yandex.ru
  */
 #ifndef ESOINN_H
 #define ESOINN_H
@@ -50,7 +51,7 @@ namespace soinn
     class ESOINNException
     {
     public:
-        ESOINNException(std::string &message):message(message){}
+        ESOINNException(std::string message):message(message){}
         ~ESOINNException(){}
         inline std::string getMessage(){
             return message;
