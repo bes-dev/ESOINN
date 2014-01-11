@@ -21,7 +21,7 @@ struct Options
     bool save_file;
     bool load_file;
     bool visible;
-    int sl_iterations;
+    int iterations;
 };
 
 int options(int argc, char ** argv, Options& opts)
@@ -33,7 +33,7 @@ int options(int argc, char ** argv, Options& opts)
     desc.add_options()("save,S", po::value<std::string>(&opts.filename_save)->default_value("soinn.xml"), "file name with a model for save");
     desc.add_options()("fload,O", po::value<bool>(&opts.load_file)->default_value(0), "load model?(flag)");
     desc.add_options()("fsave,C", po::value<bool>(&opts.save_file)->default_value(1), "save model?(flag)");
-    desc.add_options()("iteration,T", po::value<int>(&opts.sl_iterations)->default_value(3000), "the number of iterations for training the second layer");
+    desc.add_options()("iteration,T", po::value<int>(&opts.iterations)->default_value(10000), "the number of iterations for training the second layer");
     desc.add_options()("visible,V", po::value<bool>(&opts.visible)->default_value(1), "visible mode(1 - on; 0 - off)");
 
     po::variables_map vm;
@@ -105,7 +105,7 @@ int main(int argc, char **argv)
         }
 
         int size = points.size();
-        for(int i = 0; i < 10000; ++i)
+        for(int i = 0; i < opts.iterations; ++i)
         {
             std::cout<<i<<"\n";
             int id = std::rand() % size;
