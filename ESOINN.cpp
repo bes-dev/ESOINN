@@ -11,100 +11,86 @@
 #include <boost/property_map/property_map.hpp>
 #include <boost/graph/iteration_macros.hpp>
 
+#define E1(t) 1./t
+#define E2(t) 1./(100*t)
+
 using namespace soinn;
 using namespace boost::numeric;
 
 ESOINN::ESOINN(int dim, int ageMax, int iterationThreshold, double c1, double c2): dim(dim), ageMax(ageMax), iterationThreshold(iterationThreshold), c1(c1), c2(c2){
 }
 
-ESOINN::~ESOINN(){
+ESOINN::~ESOINN() {
 }
 
-Graph ESOINN::getGraph(){
+Graph ESOINN::getGraph() {
     return graph;
 }
 
-void ESOINN::init(boost::numeric::ublas::vector<double> firstSignal, boost::numeric::ublas::vector<double> secondSignal)
-{
-    if(firstSignal.size() != dim || secondSignal.size() != dim){
-        throw ESOINNException(std::string("Incorrect dimension of input signals in ESOINN::init()."));
-    }
-    else{
-        Vertex firstVertex = boost::add_vertex(graph);
-        graph[firstVertex].weight = firstSignal;
-        graph[firstVertex].classId = -1;
-        graph[firstVertex].density = 0.;
-        graph[firstVertex].numberOfSignals = 0;
-        graph[firstVertex].S = 0;
-        Vertex secondVertex = boost::add_vertex(graph);
-        graph[secondVertex].weight = secondSignal;
-        graph[secondVertex].classId = -1;
-        graph[secondVertex].density = 0.;
-        graph[secondVertex].numberOfSignals = 0;
-        graph[secondVertex].S = 0;
+void ESOINN::process(const boost::numeric::ublas::vector<double> &inputSignal) {
+    if(inputSignal.size() != dim) {
+        throw ESOINNException(std::string("Incorrect dimension of input signal in ESOINN::addSignal()."));
+    } else {
+        addSignal(inputSignal);
     }
 }
 
 void ESOINN::addSignal(const boost::numeric::ublas::vector<double> &inputSignal) {
-    if(inputSignal.size() != dim) {
-        throw ESOINNException(std::string("Incorrect dimension of input signal in ESOINN::addSignal()."));
+    if(boost::num_vertices(graph) < 2) {
+        Vertex vertex = boost::add_vertex(graph);
+        graph[vertex].weight = ublas::vector<double>(inputSignal);
+        graph[vertex].classId = -1;
+        graph[vertex].density = 0.;
+        graph[vertex].numberOfSignals = 0;
+        graph[vertex].S = 0;
+        return;
     }
-    else {
-        if(boost::num_vertices(graph) < 2) {
-            Vertex vertex = boost::add_vertex(graph);
-            graph[vertex].weight = ublas::vector<double>(inputSignal);
-            graph[vertex].classId = -1;
-            graph[vertex].density = 0.;
-            graph[vertex].numberOfSignals = 0;
-            graph[vertex].S = 0;
-            return;
-        }
-        Vertex firstWinner, secondWinner;
-        boost::tie(firstWinner, secondWinner) = findWinners(inputSignal);
-        if(!isWithinThreshold(inputSignal, firstWinner, secondWinner)){
-            Vertex vertex = boost::add_vertex(graph);
-            graph[vertex].weight = ublas::vector<double>(inputSignal);
-            graph[vertex].classId = -1;
-            graph[vertex].density = 0.;
-            graph[vertex].numberOfSignals = 0;
-            graph[vertex].S = 0;
-            return;
-        }
-        incrementEdgesAge(firstWinner);
-        if(needAddEdge(firstWinner, secondWinner)) {
-            Edge e = boost::add_edge(firstWinner, secondWinner, graph).first;
-            graph[e].age = 0;
-        } else {
-            boost::remove_edge(firstWinner, secondWinner, graph);
-        }
-        updateDensity(firstWinner);
-        deleteOldEdges();
-        if(iterationCount % iterationThreshold == 0) {
-            updateClassLabels();
-        }
-        iterationCount++;
+    Vertex firstWinner, secondWinner;
+    boost::tie(firstWinner, secondWinner) = findWinners(inputSignal);
+    if(!isWithinThreshold(inputSignal, firstWinner, secondWinner)){
+        Vertex vertex = boost::add_vertex(graph);
+        graph[vertex].weight = ublas::vector<double>(inputSignal);
+        graph[vertex].classId = -1;
+        graph[vertex].density = 0.;
+        graph[vertex].numberOfSignals = 0;
+        graph[vertex].S = 0;
+        return;
     }
+    incrementEdgesAge(firstWinner);
+    if(needAddEdge(firstWinner, secondWinner)) {
+        Edge e = boost::add_edge(firstWinner, secondWinner, graph).first;
+        graph[e].age = 0;
+    } else {
+        boost::remove_edge(firstWinner, secondWinner, graph);
+    }
+    updateDensity(firstWinner);
+    updateWeights(firstWinner, inputSignal);
+    deleteOldEdges();
+    if(iterationCount % iterationThreshold == 0) {
+        updateClassLabels();
+    }
+    iterationCount++;
 }
 
 double ESOINN::distance(const boost::numeric::ublas::vector<double> &x, const boost::numeric::ublas::vector<double> &y){
     return ublas::norm_2( x - y );
 }
 
-std::pair<Vertex,Vertex> ESOINN::findWinners(const boost::numeric::ublas::vector<double> &inputSignal){
+std::pair<Vertex,Vertex> ESOINN::findWinners(const boost::numeric::ublas::vector<double> &inputSignal) {
     Vertex firstWinner = NULL;
     Vertex secondWinner = NULL;
     double firstWinnerDistance = std::numeric_limits<double>::max();
     double secondWinnerDistance = std::numeric_limits<double>::max();
     VertexIterator current, end;
     boost::tie(current, end) = boost::vertices(graph);
-    for(; current != end; current++){
+    for(; current != end; current++) {
         double dist = distance(inputSignal, graph[*current].weight);
-        if(dist < firstWinnerDistance){
+        if(dist < firstWinnerDistance) {
             secondWinner = firstWinner;
             secondWinnerDistance = firstWinnerDistance;
             firstWinner = *current;
             firstWinnerDistance = dist;
-        } else if(dist < secondWinnerDistance){
+        } else if(dist < secondWinnerDistance) {
             secondWinner = *current;
             secondWinnerDistance = dist;
         }
@@ -112,11 +98,11 @@ std::pair<Vertex,Vertex> ESOINN::findWinners(const boost::numeric::ublas::vector
     return std::pair<Vertex,Vertex>(firstWinner, secondWinner);
 }
 
-bool ESOINN::isWithinThreshold(const boost::numeric::ublas::vector<double>& inputSignal, Vertex& firstWinner, Vertex& secondWinner){
-    if(distance(inputSignal, graph[firstWinner].weight) > getSimilarityThreshold(firstWinner)){
+bool ESOINN::isWithinThreshold(const boost::numeric::ublas::vector<double>& inputSignal, Vertex& firstWinner, Vertex& secondWinner) {
+    if(distance(inputSignal, graph[firstWinner].weight) > getSimilarityThreshold(firstWinner)) {
         return false;
     }
-    if(distance(inputSignal, graph[secondWinner].weight) > getSimilarityThreshold(secondWinner)){
+    if(distance(inputSignal, graph[secondWinner].weight) > getSimilarityThreshold(secondWinner)) {
         return false;
     }
     return true;
@@ -136,8 +122,7 @@ double ESOINN::getSimilarityThreshold(const Vertex& vertex) {
                 }
             }
         }
-    }
-    else {
+    } else {
         dist = std::numeric_limits<double>::min();
         AdjacencyIterator current, end;
         boost::tie(current, end) = boost::adjacent_vertices(vertex, graph);
@@ -229,11 +214,9 @@ double ESOINN::densityThershold(double mean, double max) {
     double threshold;
     if(2.0 * mean >= max) {
         threshold = 0.0;
-    }
-    else if(3.0 * mean >= max && max > 2.0 * mean) {
+    } else if(3.0 * mean >= max && max > 2.0 * mean) {
         threshold = 0.5;
-    }
-    else {
+    } else {
         threshold = 1.0;
     }
     return threshold;
@@ -244,6 +227,15 @@ void ESOINN::updateDensity(Vertex& vertex) {
     graph[vertex].numberOfSignals++;
     graph[vertex].S += 1./((1 + mDistance)*(1 + mDistance));
     graph[vertex].density = graph[vertex].S/double(graph[vertex].numberOfSignals);
+}
+
+void ESOINN::updateWeights(Vertex& firstWinner, const boost::numeric::ublas::vector<double> &inputSignal) {
+    graph[firstWinner].weight += E1(graph[firstWinner].numberOfSignals) * (inputSignal - graph[firstWinner].weight);
+    AdjacencyIterator current, end;
+    boost::tie(current, end) = boost::adjacent_vertices(firstWinner, graph);
+    for(; current != end; current++) {
+        graph[*current].weight += E2(graph[firstWinner].numberOfSignals) * (inputSignal - graph[*current].weight);
+    }
 }
 
 double ESOINN::meanDistance(Vertex& vertex) {
@@ -388,4 +380,35 @@ void ESOINN::setParams(int dim, int ageMax, int iterationThreshold, double c1, d
 
 int ESOINN::getNumberOfClasses() {
     return numberOfClasses;
+}
+
+int ESOINN::getNumberOfVertices() {
+    return boost::num_vertices(graph);
+}
+
+boost::numeric::ublas::vector<double> ESOINN::getCenterOfCluster(int classId) {
+    double density = -1;
+    Vertex center;
+    BGL_FORALL_VERTICES(v, graph, Graph) {
+        if(graph[v].classId == classId && graph[v].density > density) {
+            center = v;
+            density = graph[center].density;
+        }
+    }
+    return graph[center].weight;
+}
+
+VertexProperties ESOINN::getBestMatch(boost::numeric::ublas::vector<double>& inputSignal) {
+    Vertex firstWinner = NULL;
+    double firstWinnerDistance = std::numeric_limits<double>::max();
+    VertexIterator current, end;
+    boost::tie(current, end) = boost::vertices(graph);
+    for(; current != end; current++) {
+        double dist = distance(inputSignal, graph[*current].weight);
+        if(dist < firstWinnerDistance) {
+            firstWinner = *current;
+            firstWinnerDistance = dist;
+        }
+    }
+    return graph[firstWinner];
 }
