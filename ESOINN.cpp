@@ -311,8 +311,11 @@ double ESOINN::meanDistance(Vertex& vertex)
     boost::tie(current, end) = boost::vertices(graph);
     for(; current != end; current++)
     {
-        mDistance += distance(graph[vertex].weight, graph[*current].weight);
-        m++;
+        if (graph[vertex].classId == graph[*current])
+        {
+            mDistance += distance(graph[vertex].weight, graph[*current].weight);
+            m++;
+        }
     }
     mDistance *= 1./double(m);
     return mDistance;
