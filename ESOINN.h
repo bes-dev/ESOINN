@@ -75,6 +75,7 @@ public:
     void save(std::string filename);
     void load(std::string filename);
     void clear();
+
 private:
     int dim;
     Graph graph;
@@ -105,6 +106,7 @@ private:
     void markAdjacentVertices(Vertex &vertex, int cID);
     void deleteNoiseVertex();
     double distance(const boost::numeric::ublas::vector<double> &x, const boost::numeric::ublas::vector<double> &y);
+
 private:
     friend class boost::serialization::access;
     template<class Archive> void serialize(Archive & ar, const unsigned int version) {

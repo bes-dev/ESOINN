@@ -355,7 +355,7 @@ void ESOINN::classify() {
 void ESOINN::save(std::string filename) {
     std::ofstream ofs(filename.c_str());
     boost::archive::xml_oarchive oa(ofs);
-    oa << BOOST_SERIALIZATION_NVP(this);
+    oa << BOOST_SERIALIZATION_NVP(*this);
 }
 
 void ESOINN::load(std::string filename) {

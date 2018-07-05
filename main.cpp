@@ -6,14 +6,12 @@
 #include "ESOINN.h"
 #include <boost/numeric/ublas/vector.hpp>
 
-typedef boost::numeric::ublas ub;
-
 int main() {
     soinn::ESOINN model(4, 4, 30);
     std::ifstream ifs;
     ifs.open("input.txt");
     ifs.open("iris.txt");
-    ub::vector<double> input(4);
+    boost::numeric::ublas::vector<double> input(4);
     int num;
     int tmp;
     for(int t = 0; t < 150; t++) {
