@@ -14,14 +14,16 @@
 
 namespace soinn {
 
-struct VertexProperties {
+struct VertexProperties
+{
     boost::numeric::ublas::vector<double> weight;
     int classId;
     double density;
     int numberOfSignals;
     double S;
     friend class boost::serialization::access;
-    template<class Archive> void serialize(Archive & ar, const unsigned int version) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int version)
+    {
         ar & BOOST_SERIALIZATION_NVP(weight);
         ar & BOOST_SERIALIZATION_NVP(classId);
         ar & BOOST_SERIALIZATION_NVP(density);
@@ -30,10 +32,12 @@ struct VertexProperties {
     }
 };
 
-struct EdgeProperties {
+struct EdgeProperties
+{
     int age;
     friend class boost::serialization::access;
-    template<class Archive> void serialize(Archive & ar, const unsigned int version) {
+    template<class Archive> void serialize(Archive & ar, const unsigned int version)
+    {
         ar & BOOST_SERIALIZATION_NVP(age);
     }
 };
@@ -51,16 +55,15 @@ typedef std::map<Vertex, int> ComponentMap;
 class ESOINNException
 {
 public:
-    ESOINNException(std::string message):message(message){}
+    ESOINNException(std::string message):message(message) {}
     ~ESOINNException(){}
-    inline std::string getMessage() {
-        return message;
-    }
+    inline std::string getMessage() {return message;}
 private:
     std::string message;
 };
 
-class ESOINN {
+class ESOINN
+{
 public:
     ESOINN(int dim = 2, int ageMax = 30, int iterationThreshold = 50, double c1 = 0.001, double c2 = 1.0);
     ~ESOINN();
